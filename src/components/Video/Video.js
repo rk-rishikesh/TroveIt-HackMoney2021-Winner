@@ -3,12 +3,11 @@ import { withStyles } from "@material-ui/core/styles";
 import Card from "@material-ui/core/Card";
 import Button from "@material-ui/core/Button";
 import Web3 from "web3";
-import Posts from "../../abis/Posts.json";
+import VideoMarket from "../../abis/VideoMarket.json";
 import { FingerprintSpinner } from "react-epic-spinners";
-import AddAPhotoIcon from '@material-ui/icons/AddAPhoto';
+import VideoCallIcon from '@material-ui/icons/VideoCall';
 import IconButton from "@material-ui/core/IconButton";
 import CloudUploadIcon from "@material-ui/icons/CloudUpload";
-import JIMP from "jimp";
 
 
 const useStyles = (theme) => ({
@@ -30,7 +29,7 @@ const ipfs = ipfsClient({
   protocol: "https",
 }); // leaving out the arguments will default to these values
 
-class Upload extends Component {
+class Video extends Component {
   async componentWillMount() {
     await this.loadWeb3();
     await this.loadBlockchainData();
@@ -50,39 +49,40 @@ class Upload extends Component {
   }
 
   async loadBlockchainData() {
-
     const web3 = window.web3;
     // Load account
     const accounts = await web3.eth.getAccounts();
     this.setState({ account: accounts[0] });
     // Network ID
     const networkId = await web3.eth.net.getId();
-    const networkData = Posts.networks[networkId];
+    const networkData = VideoMarket.networks[networkId];
     if (networkData) {
-      const posts = new web3.eth.Contract(Posts.abi, networkData.address);
-      this.setState({ posts });
+      const videomarket = new web3.eth.Contract(VideoMarket.abi, networkData.address);
+      this.setState({ videomarket });
+      const videosCount = await videomarket.methods.videoCount().call();
+      this.setState({ videosCount });
 
-      const originalPostCount = await posts.methods
-        .originalPostCount()
-        .call();
-
-      this.setState({ originalPostCount });
-
-      // Load original posts
-      for (var i = 1; i <= originalPostCount; i++) {
-        const originalPost = await posts.methods.originalPosts(i).call();
+      // Load videos, sort by newest
+      for (var i = videosCount; i >= 1; i--) {
+        const video = await videomarket.methods.videos(i).call();
         this.setState({
-          originalPosts: [...this.state.originalPosts, originalPost],
+          videos: [...this.state.videos, video],
         });
       }
+      
+        const response = await videomarket.methods.checkBalance().call({from: this.state.account })
+          console.log(response);
+          this.setState({balance: response})
 
-      const feedPostCount = await posts.methods.feedPostCount().call();
-
-      this.setState({ feedPostCount });
-
+      //Set latest video with title to view as default
+      const latest = await videomarket.methods.videos(videosCount).call();
+      this.setState({
+        currentHash: latest.hash,
+        currentTitle: latest.title,
+      });
       this.setState({ loading: false });
     } else {
-      window.alert("Posts contract not deployed to detected network.");
+      window.alert("DVideo contract not deployed to detected network.");
     }
   }
 
@@ -98,87 +98,74 @@ class Upload extends Component {
     };
   };
 
-  uploadPost = (caption) => {
+  uploadVideo = (title) => {
     this.setState({ loading: true });
     console.log("Submitting file to IPFS...");
+
     //adding file to the IPFS
     ipfs.add(this.state.buffer, (error, result) => {
-      console.log("Ipfs result", result);
+      console.log("IPFS result", result);
       if (error) {
         console.error(error);
         return;
       }
 
-      async function getHash(img1) {
-        const loadImage1 = await JIMP.read(img1);
-        const hash1 = loadImage1.hash();
-        return hash1;
-      }
-
-      const babe = getHash(`https://ipfs.infura.io/ipfs/${result[0].hash}`);
-      console.log(babe);
-
-      //Feed Post
-      this.state.originalPosts.forEach((originalPost) => {
-        babe.then((value) => {
-          console.log("Feed : ", JIMP.compareHashes(value, originalPost.phash));
-          if (
-            result[0].hash == originalPost.hash ||
-            JIMP.compareHashes(value, originalPost.phash) <= 0.25
-          ) {
-            //add condition here
-            this.setState({ flag: false });
-            console.log("FEED POST");
-            this.state.posts.methods
-              .uploadPost(result[0].hash, value, caption, false)
-              .send({ from: this.state.account })
-              .on("transactionHash", (hash) => {
-                this.setState({ loading: false });
-              });
-          }
-          console.log(value);
+      this.state.videomarket.methods
+        .uploadVideo(result[0].hash, title, 1)
+        .send({ from: this.state.account })
+        .on("transactionHash", (hash) => {
+          this.setState({ loading: false });
         });
-      });
-
-      //Original Post
-      babe.then((value) => {
-        if (this.state.flag) {
-          console.log("Ori : ", value);
-          this.setState({ loading: true });
-          console.log(value);
-          console.log("ORIGINAL");
-          this.state.posts.methods
-            .uploadPost(result[0].hash, value, caption, true)
-            .send({ from: this.state.account })
-            .on("transactionHash", (hash) => {
-              this.setState({ loading: false });
-            });
-        }
-      });
     });
   };
+
+  
+  buyToken = (amount) => {
+    this.setState({ loading: true });
+    this.state.videomarket.methods.buyToken().send({from: this.state.account, value: amount}).on('transactionHash', (hash) => {
+    this.setState({ loading: false });
+    })
+  }
+
+  sellToken = (amount) => {
+    this.setState({ loading: true });
+    this.state.videomarket.methods.sellToken(amount).send({from: this.state.account }).on('transactionHash', (hash) => {
+    this.setState({ loading: false });
+    })
+  }
+
+  withdraw = () => {
+    this.setState({ loading: true });
+    this.state.videomarket.methods.withdraw().send({from: this.state.account }).on('transactionHash', (hash) => {
+    this.setState({ loading: false });
+    })    
+  }
 
   constructor(props) {
     super(props);
     this.state = {
+      buffer: null,
       account: "",
-      posts: null,
-      originalPostCount: 0,
-      originalPosts: [],
-      feedPostCount: 0,
+      videomarket: null,
+      videos: [],
       loading: true,
-      flag: true,
+      currentHash: null,
+      currentTitle: null,
+      balance: 0
     };
 
-    this.uploadPost = this.uploadPost.bind(this);
+    this.uploadVideo = this.uploadVideo.bind(this);
     this.captureFile = this.captureFile.bind(this);
+    this.buyToken = this.buyToken.bind(this);
+    this.sellToken = this.sellToken.bind(this);
+    this.withdraw = this.withdraw.bind(this);
   }
 
   render() {
     const { classes } = this.props;
     return (
       <div
-        style={{ width: "100%", height: "80%" }}
+        style={{ width: "100%", height: "80%"}}
       >
         {this.state.loading ? (
           <div className="center mt-19">
@@ -195,16 +182,13 @@ class Upload extends Component {
             <br></br>
             <Card className={classes.root}>
               <div className={classes.root}>
-               
                 <form
                   onSubmit={(event) => {
                     event.preventDefault();
-                    const caption = this.imageCaption.value;
-                    this.uploadPost(caption);
+                    const title = this.videoTitle.value;
+                    this.uploadVideo(title);
                   }}
                 >
-
-
                   <div
                     style={{
                       display: "flex",
@@ -213,7 +197,7 @@ class Upload extends Component {
                     }}
                   >
                     <input
-                      accept="image/*"
+                      accept=".mp4, .mkv .ogg .wmv"
                       className={classes.input}
                       id="icon-button-file"
                       type="file"
@@ -225,20 +209,19 @@ class Upload extends Component {
                         aria-label="upload picture"
                         component="span"
                       >
-                        <AddAPhotoIcon />
+                        <VideoCallIcon />
                       </IconButton>
                     </label>
                   </div>
-                  {/* Add caption */}
                   <div>
                     <input
-                      id="imageCaption"
+                      id="videoTitle"
                       type="text"
                       ref={(input) => {
-                        this.imageCaption = input;
+                        this.videoTitle = input;
                       }}
                       className="form-control"
-                      placeholder="Caption ..."
+                      placeholder="Title ..."
                       required
                     />
                     <div
@@ -269,4 +252,4 @@ class Upload extends Component {
   }
 }
 
-export default withStyles(useStyles)(Upload);
+export default withStyles(useStyles)(Video);

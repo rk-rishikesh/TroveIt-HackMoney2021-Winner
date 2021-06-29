@@ -2,7 +2,7 @@
 
 pragma solidity ^0.6.0;
 
-contract Trove{
+contract Posts{
   
     uint256 public originalPostCount = 0;
     

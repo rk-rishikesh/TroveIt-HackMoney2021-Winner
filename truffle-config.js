@@ -21,19 +21,35 @@ module.exports = {
       skipDryRun: true
     },
     matic: {
-      provider: () => new HDWalletProvider(mnemonic, `https://rpc-mumbai.matic.today`),
+      provider: () => new HDWalletProvider(mnemonic, `https://rpc-mumbai.maticvigil.com`),
       network_id: 80001,
       confirmations: 2,
-      timeoutBlocks: 200,
+      timeoutBlocks: 50000,
+      networkCheckTimeout: 10000000,
       skipDryRun: true
     },
   },
   
   contracts_directory: './src/contracts/',
   contracts_build_directory: './src/abis/',
+  // compilers: {
+  //   solc: {
+  //     version: "^0.5.0"
+  //   }
+  // }
+  mocha: {
+    timeout: 20000
+  },
   compilers: {
     solc: {
-      version: "^0.6.0"
+      version: "^0.6.0",    //<==========CHANGED THAT from "0.5.1"
+      docker: false,        
+      settings: {         
+       optimizer: {
+         enabled: false,
+         runs: 200
+       },
+      }
     }
   }
 }
