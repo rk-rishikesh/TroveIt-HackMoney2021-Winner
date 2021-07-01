@@ -1,11 +1,9 @@
 import React, { Component } from 'react';
 import Web3 from 'web3';
-import Posts from '../../abis/Posts.json'
+import { Biconomy } from '@biconomy/mexa';
+import TroveIt from '../../abis/TroveIt.json'
 import {FingerprintSpinner} from 'react-epic-spinners'
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Checkbox from '@material-ui/core/Checkbox';
 import Favorite from '@material-ui/icons/Favorite';
-import FavoriteBorder from '@material-ui/icons/FavoriteBorder';
 
 
 //import Portis from '@portis/web3';
@@ -20,6 +18,8 @@ const style = {
   }
 }
 
+let biconomy;
+
 class Feeds extends Component {
 
   async componentWillMount() {
@@ -29,11 +29,13 @@ class Feeds extends Component {
 
   async loadWeb3() {
     if (window.ethereum) {
-      window.web3 = new Web3(window.ethereum)
+      biconomy = new Biconomy(window.ethereum, { apiKey: "GmWNyq8kr.8729384c-dac2-4156-aca6-ac4208761300" });
+      window.web3 = new Web3(biconomy)
       await window.ethereum.enable()
     }
     else if (window.web3) {
-      window.web3 = new Web3(window.web3.currentProvider)
+      biconomy = new Biconomy(window.web3.currentProvider, { apiKey: "GmWNyq8kr.8729384c-dac2-4156-aca6-ac4208761300" });
+      window.web3 = new Web3(biconomy)
     }
     else {
       window.alert('Non-Ethereum browser detected. You should consider trying MetaMask!')
@@ -43,23 +45,25 @@ class Feeds extends Component {
   async loadBlockchainData() {
 
     const web3 = window.web3
+    
+    biconomy.onEvent(biconomy.READY, async() => {
     // Load account
     const accounts = await web3.eth.getAccounts()
     this.setState({ account: accounts[0] })
     // Network ID
     const networkId = await web3.eth.net.getId()
-    const networkData = Posts.networks[networkId]
+    const networkData = TroveIt.networks[networkId]
     if(networkData) {
-      const posts = new web3.eth.Contract(Posts.abi, networkData.address)
-      this.setState({ posts })
+      const troveIt = new web3.eth.Contract(TroveIt.abi, networkData.address)
+      this.setState({ troveIt })
       
-      const feedPostCount = await posts.methods.feedPostCount().call()
+      const feedPostCount = await troveIt.methods.feedPostCount().call()
 
       this.setState({ feedPostCount })
 
       // Load feed posts
       for (var i = 1; i <= feedPostCount; i++) {
-        const feedPost = await posts.methods.feedPosts(i).call()
+        const feedPost = await troveIt.methods.feedPosts(i).call()
         this.setState({
           feedPosts: [...this.state.feedPosts, feedPost]
         })
@@ -68,19 +72,36 @@ class Feeds extends Component {
       this.setState({ loading: false})
 
     } else {
-      window.alert('Posts contract not deployed to detected network.')
+      window.alert('TroveIt contract not deployed to detected network.')
     }
+
+  }).onEvent(biconomy.ERROR, (error, message) => {
+      
+    // Handle error while initializing mexa
+    console.log(error)
+  });
+
   }
+
+  likeFeedPost(feedId, originalPostId){
+    this.setState({ loading: true })
+    this.state.troveIt.methods.likeFeedPost(feedId, originalPostId).send({ from: this.state.account }).on('transactionHash', (hash) => {
+    this.setState({ loading: false })
+  })
+  }
+
 
   constructor(props) {
     super(props)
     this.state = {
       account: '',
-      posts: null,
+      troveIt: null,
       feedPostCount: 0,
       feedPosts: [],
       loading: true,
     }
+
+    this.likeFeedPost = this.likeFeedPost.bind(this)
   }
 
   render() {
@@ -115,16 +136,26 @@ class Feeds extends Component {
                         <p style={{color:"black"}}>{feedPost.caption}</p>
                       </li>
                       <li key={key} className="list-group-item py-2">
-                        <div className="btn btn-link btn-sm float-right pt-0" style={{
+                        <p className="float-left" style={{color:"black"}}>
+                          Original Post ID: {feedPost.originalId}
+                        </p> 
+                      <div className="btn btn-link btn-sm float-right pt-0" style={{
                             margin: 'auto',
                             display: 'block',
                             width: 'fit-content'
                             }}>
-                            <FormControlLabel
-                                control={<Checkbox icon={<FavoriteBorder />} checkedIcon={<Favorite />}
-                                name="checked" />}
-                            />
-                            </div>
+
+                            <button
+                              className="btn btn-link btn-sm float-left pt-0"
+                              onClick={(event) => {                            
+                                this.likeFeedPost(feedPost.id, feedPost.originalId)
+                                
+                              }}
+                            >
+                            {feedPost.likes}  <Favorite/>
+                            </button>
+                            
+                        </div>
                       </li>
                     </ul>
                   </div>

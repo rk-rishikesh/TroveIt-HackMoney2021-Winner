@@ -3,7 +3,7 @@ import { withStyles } from "@material-ui/core/styles";
 import Card from "@material-ui/core/Card";
 import Button from "@material-ui/core/Button";
 import Web3 from "web3";
-import Posts from "../../abis/Posts.json";
+import TroveIt from "../../abis/TroveIt.json";
 import { FingerprintSpinner } from "react-epic-spinners";
 import AddAPhotoIcon from '@material-ui/icons/AddAPhoto';
 import IconButton from "@material-ui/core/IconButton";
@@ -30,6 +30,8 @@ const ipfs = ipfsClient({
   protocol: "https",
 }); // leaving out the arguments will default to these values
 
+
+
 class Upload extends Component {
   async componentWillMount() {
     await this.loadWeb3();
@@ -37,10 +39,10 @@ class Upload extends Component {
   }
 
   async loadWeb3() {
-    if (window.ethereum) {
+    if (window.ethereum) {     
       window.web3 = new Web3(window.ethereum);
       await window.ethereum.enable();
-    } else if (window.web3) {
+    } else if (window.web3) {      
       window.web3 = new Web3(window.web3.currentProvider);
     } else {
       window.alert(
@@ -52,38 +54,45 @@ class Upload extends Component {
   async loadBlockchainData() {
 
     const web3 = window.web3;
+    
+    
+
+    // Initialize your dapp here like getting user accounts etc
     // Load account
     const accounts = await web3.eth.getAccounts();
     this.setState({ account: accounts[0] });
     // Network ID
     const networkId = await web3.eth.net.getId();
-    const networkData = Posts.networks[networkId];
+    const networkData = TroveIt.networks[networkId];
     if (networkData) {
-      const posts = new web3.eth.Contract(Posts.abi, networkData.address);
-      this.setState({ posts });
+      const troveit = new web3.eth.Contract(TroveIt.abi, networkData.address);
+      this.setState({ troveit });
 
-      const originalPostCount = await posts.methods
+      const originalPostCount = await troveit.methods
         .originalPostCount()
         .call();
 
       this.setState({ originalPostCount });
 
-      // Load original posts
+      // Load original troveit
       for (var i = 1; i <= originalPostCount; i++) {
-        const originalPost = await posts.methods.originalPosts(i).call();
+        const originalPost = await troveit.methods.originalPosts(i).call();
         this.setState({
           originalPosts: [...this.state.originalPosts, originalPost],
         });
       }
 
-      const feedPostCount = await posts.methods.feedPostCount().call();
+      const feedPostCount = await troveit.methods.feedPostCount().call();
 
       this.setState({ feedPostCount });
 
       this.setState({ loading: false });
     } else {
-      window.alert("Posts contract not deployed to detected network.");
+      window.alert("TroveIt contract not deployed to detected network.");
     }
+    
+    
+    
   }
 
   captureFile = (event) => {
@@ -124,13 +133,14 @@ class Upload extends Component {
           console.log("Feed : ", JIMP.compareHashes(value, originalPost.phash));
           if (
             result[0].hash == originalPost.hash ||
-            JIMP.compareHashes(value, originalPost.phash) <= 0.25
+            JIMP.compareHashes(value, originalPost.phash) <= 0.35
           ) {
             //add condition here
             this.setState({ flag: false });
             console.log("FEED POST");
-            this.state.posts.methods
-              .uploadPost(result[0].hash, value, caption, false)
+            console.log("Original Owner : ", originalPost.owner);
+            this.state.troveit.methods
+              .uploadPost(result[0].hash, value, caption, false, 1, originalPost.id)
               .send({ from: this.state.account })
               .on("transactionHash", (hash) => {
                 this.setState({ loading: false });
@@ -147,8 +157,8 @@ class Upload extends Component {
           this.setState({ loading: true });
           console.log(value);
           console.log("ORIGINAL");
-          this.state.posts.methods
-            .uploadPost(result[0].hash, value, caption, true)
+          this.state.troveit.methods
+            .uploadPost(result[0].hash, value, caption, true, 1, 1)
             .send({ from: this.state.account })
             .on("transactionHash", (hash) => {
               this.setState({ loading: false });
@@ -162,7 +172,7 @@ class Upload extends Component {
     super(props);
     this.state = {
       account: "",
-      posts: null,
+      troveit: null,
       originalPostCount: 0,
       originalPosts: [],
       feedPostCount: 0,

@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import Web3 from "web3";
-import VideoMarket from "../../abis/VideoMarket.json";
+import TroveIt from "../../abis/TroveIt.json";
 import { FingerprintSpinner } from "react-epic-spinners";
 import ScrollMenu from "react-horizontal-scrolling-menu";
 import "./videoBar.css";
@@ -50,16 +50,16 @@ class VideoChoice extends Component {
     this.setState({ account: accounts[0] });
     // Network ID
     const networkId = await web3.eth.net.getId();
-    const networkData = VideoMarket.networks[networkId];
+    const networkData = TroveIt.networks[networkId];
     if (networkData) {
-      const videomarket = new web3.eth.Contract(VideoMarket.abi, networkData.address);
-      this.setState({ videomarket });
-      const videosCount = await videomarket.methods.videoCount().call();
+      const troveit = new web3.eth.Contract(TroveIt.abi, networkData.address);
+      this.setState({ troveit });
+      const videosCount = await troveit.methods.videoCount().call();
       this.setState({ videosCount });
 
       // Load videos, sort by newest
       for (var i = videosCount; i >= 1; i--) {
-        const video = await videomarket.methods.videos(i).call();
+        const video = await troveit.methods.videos(i).call();
         this.setState({
           videos: [...this.state.videos, video],
         });
@@ -95,7 +95,7 @@ class VideoChoice extends Component {
       }
 
       this.setState({ loading: true });
-      this.state.videomarket.methods
+      this.state.troveit.methods
         .uploadVideo(result[0].hash, title, 1)
         .send({ from: this.state.account })
         .on("transactionHash", (hash) => {
@@ -107,7 +107,7 @@ class VideoChoice extends Component {
   changeVideo = (id, hash, title, owner) => {
     this.setState({ loading: true });
     //make payment
-    this.state.videomarket.methods.watchVideo(id).send({ from: this.state.account}).on('transactionHash', (hash) => {
+    this.state.troveit.methods.watchVideo(id).send({ from: this.state.account}).on('transactionHash', (hash) => {
       this.setState({ loading: false })
     })
 
@@ -122,7 +122,7 @@ class VideoChoice extends Component {
     this.state = {
       buffer: null,
       account: "",
-      videomarket: null,
+      troveit: null,
       videos: [],
       loading: true,
       currentHash: null,
@@ -185,14 +185,11 @@ class VideoChoice extends Component {
                           <div>
                             <p
                               onClick={() => {
-                                let watchCost = window.web3.utils.toWei('0.1', 'Ether')
-
                                 this.changeVideo(
                                   video.id,
                                   video.hash,
                                   video.title,
-                                  video.author,
-                                  watchCost
+                                  video.author,                                  
                                 )
                               }
                                 

@@ -5,6 +5,7 @@
   "author": "Rishikesh Kale",
   "homepage": ".",
   "dependencies": {
+    "@biconomy/mexa": "^2.0.10",
     "@material-ui/core": "^4.11.4",
     "@material-ui/icons": "^4.11.2",
     "@truffle/hdwallet-provider": "^1.0.8",

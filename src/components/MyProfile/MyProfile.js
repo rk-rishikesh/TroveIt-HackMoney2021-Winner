@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import Web3 from 'web3';
-import Posts from '../../abis/Posts.json'
+import TroveIt from '../../abis/TroveIt.json'
 import {FingerprintSpinner} from 'react-epic-spinners'
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -13,7 +13,7 @@ import Button from "@material-ui/core/Button";
 import AccountBalanceWalletIcon from '@material-ui/icons/AccountBalanceWallet';
 import ImportExportIcon from '@material-ui/icons/ImportExport';
 import SystemUpdateAltIcon from '@material-ui/icons/SystemUpdateAlt';
-import VideoMarket from "../../abis/VideoMarket.json";
+
 
 const useStyles = (theme) => ({
   root: {
@@ -49,49 +49,44 @@ class MyProfile extends Component {
   }
 
   async loadBlockchainData() {
-    //const portis = new Portis('4f6dfbbd-21cb-4b4f-a497-1103fdedafd0', 'maticTestnet');
-    //const web3 = new Web3(portis.provider);
+
     const web3 = window.web3
     // Load account
     const accounts = await web3.eth.getAccounts()
     this.setState({ account: accounts[0] })
     // Network ID
     const networkId = await web3.eth.net.getId()
-    const networkData = Posts.networks[networkId]
-    const networkTwoData = VideoMarket.networks[networkId];
+    const networkData = TroveIt.networks[networkId]
 
-    if(networkData && networkTwoData) {
+    if(networkData) {
       
-      const vidhira = new web3.eth.Contract(Posts.abi, networkData.address)
-      this.setState({ vidhira })
-
-      const dvideo = new web3.eth.Contract(VideoMarket.abi, networkTwoData.address);
-      this.setState({ dvideo });
+      const troveit = new web3.eth.Contract(TroveIt.abi, networkData.address)
+      this.setState({ troveit })
       
-      const originalPostCount = await vidhira.methods.originalPostCount().call()
+      const originalPostCount = await troveit.methods.originalPostCount().call()
       this.setState({ originalPostCount })
 
       // Load original posts
       for (var i = 1; i <= originalPostCount; i++) {
-        const originalPost = await vidhira.methods.originalPosts(i).call()
+        const originalPost = await troveit.methods.originalPosts(i).call()
         this.setState({
             originalPosts: [...this.state.originalPosts, originalPost]
         })
       }
       
-      const feedPostCount = await vidhira.methods.feedPostCount().call()
+      const feedPostCount = await troveit.methods.feedPostCount().call()
 
       this.setState({ feedPostCount })
       
       // Load feed posts
       for (var i = 1; i <= feedPostCount; i++) {
-        const feedPost = await vidhira.methods.feedPosts(i).call()
+        const feedPost = await troveit.methods.feedPosts(i).call()
         this.setState({
           feedPosts: [...this.state.feedPosts, feedPost]
         })
       }
 
-      const response = await dvideo.methods.checkBalance().call({from: this.state.account })
+      const response = await troveit.methods.checkBalance().call({from: this.state.account })
       console.log(response);
       this.setState({balance: response})
       
@@ -104,7 +99,7 @@ class MyProfile extends Component {
 
   changeOwner(id, tipAmount) {
       this.setState({ loading: true })
-      this.state.vidhira.methods.changeOwner(id).send({ from: this.state.account, value: tipAmount }).on('transactionHash', (hash) => {
+      this.state.troveit.methods.changeOwner(id).send({ from: this.state.account, value: tipAmount }).on('transactionHash', (hash) => {
       this.setState({ loading: false })
   })
     
@@ -112,21 +107,21 @@ class MyProfile extends Component {
 
   buyToken = (amount) => {
     this.setState({ loading: true });
-    this.state.dvideo.methods.buyToken().send({from: this.state.account, value: amount}).on('transactionHash', (hash) => {
+    this.state.troveit.methods.buyToken().send({from: this.state.account, value: amount}).on('transactionHash', (hash) => {
     this.setState({ loading: false });
     })
   }
 
   sellToken = (amount) => {
     this.setState({ loading: true });
-    this.state.dvideo.methods.sellToken(amount).send({from: this.state.account }).on('transactionHash', (hash) => {
+    this.state.troveit.methods.sellToken(amount).send({from: this.state.account }).on('transactionHash', (hash) => {
     this.setState({ loading: false });
     })
   }
 
   withdraw = () => {
     this.setState({ loading: true });
-    this.state.dvideo.methods.withdraw().send({from: this.state.account }).on('transactionHash', (hash) => {
+    this.state.troveit.methods.withdraw().send({from: this.state.account }).on('transactionHash', (hash) => {
     this.setState({ loading: false });
     })    
   }
@@ -136,8 +131,7 @@ class MyProfile extends Component {
     super(props)
     this.state = {
       account: '',
-      vidhira: null,
-      dvideo: null,
+      troveit: null,
       originalPostCount: 0,
       originalPosts: [],
       feedPostCount: 0,

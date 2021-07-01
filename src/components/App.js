@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import Navbar from './NavBar/Navbar';
 import MyProfile from './MyProfile/MyProfile';
-import Posts from '../abis/Posts.json'
+import TroveIt from '../abis/TroveIt.json'
 import Web3 from 'web3';
 import MarketPlace from './MarketPlace/MarketPlace';
 import Upload from './Upload/Upload';
@@ -36,15 +36,15 @@ class App extends Component {
     this.setState({ account: accounts[0] })
     // Network ID
     const networkId = await web3.eth.net.getId()
-    const networkData = Posts.networks[networkId]
+    const networkData = TroveIt.networks[networkId]
     if(networkData) {
-      const posts = new web3.eth.Contract(Posts.abi, networkData.address)
-      this.setState({ posts })
+      const troveit = new web3.eth.Contract(TroveIt.abi, networkData.address)
+      this.setState({ troveit })
 
       this.setState({ loading: false})
 
     } else {
-      window.alert('Posts contract not deployed to detected network.')
+      window.alert('TroveIt contract not deployed to detected network.')
     }
   }
 
@@ -52,7 +52,7 @@ class App extends Component {
     super(props)
     this.state = {
       account: '',
-      posts: null
+      troveit: null
     }
   }
 

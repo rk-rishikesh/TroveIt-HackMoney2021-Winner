@@ -3,7 +3,7 @@ import { withStyles } from "@material-ui/core/styles";
 import Card from "@material-ui/core/Card";
 import Button from "@material-ui/core/Button";
 import Web3 from "web3";
-import VideoMarket from "../../abis/VideoMarket.json";
+import TroveIt from "../../abis/TroveIt.json";
 import { FingerprintSpinner } from "react-epic-spinners";
 import VideoCallIcon from '@material-ui/icons/VideoCall';
 import IconButton from "@material-ui/core/IconButton";
@@ -55,27 +55,27 @@ class Video extends Component {
     this.setState({ account: accounts[0] });
     // Network ID
     const networkId = await web3.eth.net.getId();
-    const networkData = VideoMarket.networks[networkId];
+    const networkData = TroveIt.networks[networkId];
     if (networkData) {
-      const videomarket = new web3.eth.Contract(VideoMarket.abi, networkData.address);
-      this.setState({ videomarket });
-      const videosCount = await videomarket.methods.videoCount().call();
+      const troveit = new web3.eth.Contract(TroveIt.abi, networkData.address);
+      this.setState({ troveit });
+      const videosCount = await troveit.methods.videoCount().call();
       this.setState({ videosCount });
 
       // Load videos, sort by newest
       for (var i = videosCount; i >= 1; i--) {
-        const video = await videomarket.methods.videos(i).call();
+        const video = await troveit.methods.videos(i).call();
         this.setState({
           videos: [...this.state.videos, video],
         });
       }
       
-        const response = await videomarket.methods.checkBalance().call({from: this.state.account })
+        const response = await troveit.methods.checkBalance().call({from: this.state.account })
           console.log(response);
           this.setState({balance: response})
 
       //Set latest video with title to view as default
-      const latest = await videomarket.methods.videos(videosCount).call();
+      const latest = await troveit.methods.videos(videosCount).call();
       this.setState({
         currentHash: latest.hash,
         currentTitle: latest.title,
@@ -110,7 +110,7 @@ class Video extends Component {
         return;
       }
 
-      this.state.videomarket.methods
+      this.state.troveit.methods
         .uploadVideo(result[0].hash, title, 1)
         .send({ from: this.state.account })
         .on("transactionHash", (hash) => {
@@ -122,21 +122,21 @@ class Video extends Component {
   
   buyToken = (amount) => {
     this.setState({ loading: true });
-    this.state.videomarket.methods.buyToken().send({from: this.state.account, value: amount}).on('transactionHash', (hash) => {
+    this.state.troveit.methods.buyToken().send({from: this.state.account, value: amount}).on('transactionHash', (hash) => {
     this.setState({ loading: false });
     })
   }
 
   sellToken = (amount) => {
     this.setState({ loading: true });
-    this.state.videomarket.methods.sellToken(amount).send({from: this.state.account }).on('transactionHash', (hash) => {
+    this.state.troveit.methods.sellToken(amount).send({from: this.state.account }).on('transactionHash', (hash) => {
     this.setState({ loading: false });
     })
   }
 
   withdraw = () => {
     this.setState({ loading: true });
-    this.state.videomarket.methods.withdraw().send({from: this.state.account }).on('transactionHash', (hash) => {
+    this.state.troveit.methods.withdraw().send({from: this.state.account }).on('transactionHash', (hash) => {
     this.setState({ loading: false });
     })    
   }
@@ -146,7 +146,7 @@ class Video extends Component {
     this.state = {
       buffer: null,
       account: "",
-      videomarket: null,
+      troveit: null,
       videos: [],
       loading: true,
       currentHash: null,
