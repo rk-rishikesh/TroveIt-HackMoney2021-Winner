@@ -98,7 +98,7 @@ class Video extends Component {
     };
   };
 
-  uploadVideo = (title) => {
+  uploadVideo = (title, rate) => {
     this.setState({ loading: true });
     console.log("Submitting file to IPFS...");
 
@@ -111,7 +111,7 @@ class Video extends Component {
       }
 
       this.state.troveit.methods
-        .uploadVideo(result[0].hash, title, 1)
+        .uploadVideo(result[0].hash, title, rate)
         .send({ from: this.state.account })
         .on("transactionHash", (hash) => {
           this.setState({ loading: false });
@@ -186,7 +186,8 @@ class Video extends Component {
                   onSubmit={(event) => {
                     event.preventDefault();
                     const title = this.videoTitle.value;
-                    this.uploadVideo(title);
+                    const rate = this.videoPrice.value;
+                    this.uploadVideo(title, rate);
                   }}
                 >
                   <div
@@ -222,6 +223,17 @@ class Video extends Component {
                       }}
                       className="form-control"
                       placeholder="Title ..."
+                      required
+                    />
+                    <br></br>
+                    <input
+                      id="videoPrice"
+                      type="number"
+                      ref={(inputPrice) => {
+                        this.videoPrice = inputPrice;
+                      }}
+                      className="form-control"
+                      placeholder="Set Price"
                       required
                     />
                     <div

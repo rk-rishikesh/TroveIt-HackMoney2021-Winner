@@ -62,6 +62,7 @@ contract TroveIt is TroveCoin{
         string phash;
         string caption;
         uint256 originalId;
+        address payable originalOwner;
         address payable owner;
     }
     
@@ -138,7 +139,7 @@ contract TroveIt is TroveCoin{
     **********************************************************************/
     
     //1. Upload Post 
-    function uploadPost(string memory _postHash, string memory _phash, string memory _caption, bool _original, uint256 _price, uint256 _originalId) public {
+    function uploadPost(string memory _postHash, string memory _phash, string memory _caption, bool _original, uint256 _price, uint256 _originalId, address payable _originalOwner) public {
         // Make sure the post hash exists
         require(bytes(_postHash).length > 0);
         // Make sure post caption exists
@@ -157,7 +158,7 @@ contract TroveIt is TroveCoin{
             feedPostCount ++;
         
             // Add Post to the contract
-            feedPosts[feedPostCount] = FeedPost(feedPostCount, 0, _postHash, _phash,_caption, _originalId, msg.sender);            
+            feedPosts[feedPostCount] = FeedPost(feedPostCount, 0, _postHash, _phash,_caption, _originalId, _originalOwner, msg.sender);            
         }
 
     }

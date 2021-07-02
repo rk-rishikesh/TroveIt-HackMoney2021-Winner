@@ -13,7 +13,9 @@ import Button from "@material-ui/core/Button";
 import AccountBalanceWalletIcon from '@material-ui/icons/AccountBalanceWallet';
 import ImportExportIcon from '@material-ui/icons/ImportExport';
 import SystemUpdateAltIcon from '@material-ui/icons/SystemUpdateAlt';
-
+import SearchIcon from '@material-ui/icons/Search';
+import LoyaltyIcon from '@material-ui/icons/Loyalty';
+import { Form } from 'react-bootstrap';
 
 const useStyles = (theme) => ({
   root: {
@@ -54,6 +56,7 @@ class MyProfile extends Component {
     // Load account
     const accounts = await web3.eth.getAccounts()
     this.setState({ account: accounts[0] })
+    this.setState({showPostaccount: accounts[0]})
     // Network ID
     const networkId = await web3.eth.net.getId()
     const networkData = TroveIt.networks[networkId]
@@ -126,11 +129,17 @@ class MyProfile extends Component {
     })    
   }
 
-
+  likeOriginalPost(id){
+    this.setState({ loading: true })
+    this.state.troveit.methods.likeOriginalPost(id).send({ from: this.state.account }).on('transactionHash', (hash) => {
+    this.setState({ loading: false })
+})
+}
   constructor(props) {
     super(props)
     this.state = {
       account: '',
+      showPostaccount: '',
       troveit: null,
       originalPostCount: 0,
       originalPosts: [],
@@ -143,6 +152,7 @@ class MyProfile extends Component {
     this.buyToken = this.buyToken.bind(this);
     this.sellToken = this.sellToken.bind(this);
     this.withdraw = this.withdraw.bind(this);
+    this.likeOriginalPost = this.likeOriginalPost.bind(this);
   }
 
   render() {
@@ -196,83 +206,44 @@ class MyProfile extends Component {
               </div>
               
             {/* SELL */}
-            <div className={classes.root}>
-              <div
-                  style={{
+            <div className={classes.root}>                  
+                  <Form onSubmit={(e) => {
+                        e.preventDefault()
+                        this.sellToken(this.input.value)
+                        
+                      }}>
+                  <div style={{
                     display: "flex",
-                    alignItems: "center",                   
-                  }}
-                >
-                  <img src={token} style={{height: 80, width: 80, marginRight: "2%"}} alt="trove token" />
-                  <div style={{width:"30%"}}>
+                    alignItems: "center",                  
+                  }}>
+                    <img src={token} style={{height: 80, width: 80, marginRight: "2%"}} alt="trove token" />
+                    <div>
                     <input
-                          id="imageCaption"
-                          type="number"
-                          width="2%" 
-                          ref={(tokenAmount) => {
-                            this.inputTokenAmount = tokenAmount
-                          }}
-                          className="form-control"
-                          required
-                        />
+                      ref={(amount) => {
+                        this.input = amount
+                      }}
+                      type="number"
+                      style={{ width: "100%", marginLeft: "1%"}}
+                      className="form-control"
+                      placeholder="Token Amount"
+                      required />
+                    <input type="submit" hidden={true} />
                     </div>
+                    
                     <div>
                 
-                    <Button
-                      type="submit"
-                      color="secondary"
-                      onClick={() => { 
-                        let amount = window.web3.utils.toWei('0.1', 'Ether')
-                        this.buyToken(amount)
-                      }}
-                    >
-                      <ImportExportIcon/>
-                      Sell Token
-                    </Button>
-                  </div>
-                  </div>
-              </div>
-
-              {/* <div className={classes.root} >
-                <form
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    this.sellToken(this.inputTokenAmount.value)
-                  }}
-                >
-                  
-                  
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        marginTop: "2%",
-                      }}
-                    >
-                      <img src={token} style={{height: 80, width: 80}} alt="trove token" />
-                      <input
-                      id="imageCaption"
-                      type="number" 
-                      style={{ width: "15%", marginLeft:"1%", marginRight:"1%"}}
-                      ref={(tokenAmount) => {
-                        this.inputTokenAmount = tokenAmount
-                      }}
-                      className="form-control"
-                      required
-                    />
                       <Button
                         type="submit"
                         color="secondary"
                       >
                         <ImportExportIcon/>
-                        Sell Tokens
+                        Sell Token
                       </Button>
-                      
                     </div>
-                  
-                </form>
-              </div> */}
+                  </div>
+                  </Form>
+              </div>
+
               {/* WITHDRAW */}
               <div className={classes.root}>
               <div
@@ -317,21 +288,107 @@ class MyProfile extends Component {
               
             </Card>
             <br></br>
+
+
+          <div className="card mb-4"  >
+                    <ul id="imageList" className="list-group list-group-flush">
+                      <li className="list-group-item py-2">
+                      <div className="float-left pt-0">
+                      <Form onSubmit={(e) => {
+                        e.preventDefault()
+                        this.setState({showPostaccount: this.inputQueID.value})
+                      }}>
+                      <div style={{
+                        display: "flex",
+                        alignItems: "center",                   
+                      }}>
+                        <div>
+                        <input
+                                  ref={(inputID) => {
+                                    this.inputQueID = inputID
+                                  }}
+                                  type="text"
+                                  style={{ width: "100%"}}
+                                  className="form-control"
+                                  placeholder="Account address"
+                                  required />
+                        <input type="submit" hidden={true} />
+                        </div>
+                        
+                        <div>
+                    
+                          <Button
+                            type="submit"
+                            color="primary"
+                          >
+                            <SearchIcon/>
+                            Search User
+                          </Button>
+                        </div>
+                      </div>
+                      </Form>
+                        </div>
+
+                        {/* DONATE */}
+                      <div className="float-right pt-0" style={{
+                            margin: 'auto',
+                            display: 'block',
+                            width: 'fit-content'
+                            }}>
+
+                            <div
+                              className="float-left pt-0"
+                            >
+                            <Form onSubmit={(e) => {
+                                          e.preventDefault()
+                                          this.sellToken(this.input.value)                         
+                                    }}>
+                                    <div style={{
+                                      display: "flex",
+                                      alignItems: "center",                  
+                                    }}>
+                                      
+                                      <div>
+                                      <input
+                                        ref={(amount) => {
+                                          this.input = amount
+                                        }}
+                                        type="number"
+                                        style={{width:"100%",  marginLeft: "1%"}}
+                                        className="form-control"
+                                        placeholder="Token Amount"
+                                        required />
+                                      <input type="submit" hidden={true} />
+                                      </div>
+                                      
+                                      <div>
+                                  
+                                        <Button
+                                          type="submit"
+                                          color="primary"
+                                          
+                                        >
+                                          <LoyaltyIcon/>
+                                          Donate Token
+                                        </Button>
+                                      </div>
+                                    </div>
+                                    </Form>
+                            </div>
+                            
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+            <br></br>
+            <br></br>
             {/* MY POSTS */}
             <div class="col-lg-12 ml-auto mr-auto" style={{ maxWidth: '780px' }}>
               { this.state.originalPosts.map((originalPost, key) => {
-                  if (originalPost.owner == this.state.account) {
-                return(
-
-                    
+                  if (originalPost.owner === this.state.showPostaccount) {
+                return(   
                   <div className="card mb-4" key={key} >
                     <div className="card-header">
-                      {/* <img
-                        className='mr-2'
-                        width='30'
-                        height='30'
-                        src={`data:image/png;base64,${new Identicon(image.author, 30).toString()}`}
-                      /> */}
                       <small className="text-muted">{originalPost.owner}</small>
                     </div>
                     <ul id="imageList" className="list-group list-group-flush">
@@ -356,10 +413,17 @@ class MyProfile extends Component {
                             display: 'block',
                             width: 'fit-content'
                             }}>
-                            <FormControlLabel
-                                control={<Checkbox icon={<FavoriteBorder />} checkedIcon={<Favorite />}
-                                name="checked" />}
-                            />
+
+                            <button
+                              className="btn btn-link btn-sm float-left pt-0"
+                              name={originalPost.id}
+                              onClick={(event) => {
+                                this.likeOriginalPost(event.target.name)
+                              }}
+                            >
+                              {originalPost.likes} <Favorite/>
+                            </button>
+                            
                         </div>
                       </li>
                     </ul>

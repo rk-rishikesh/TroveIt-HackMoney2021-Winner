@@ -130,6 +130,17 @@ class MarketPlace extends Component {
                   <div className="card mb-4" key={key} >
                     <div className="card-header">
                       <small className="text-muted">{originalPost.owner}</small>
+                      <div className="float-right pt-0" style={{
+                            margin: 'auto',
+                            display: 'block',
+                            width: 'fit-content'
+                            }}>
+
+                            <small className="btn float-left pt-0" >
+                              Rate : {originalPost.price} TT
+                            </small>
+                            
+                        </div>
                     </div>
                     <ul id="imageList" className="list-group list-group-flush">
                       <li className="list-group-item">
@@ -159,7 +170,7 @@ class MarketPlace extends Component {
                                 this.likeOriginalPost(event.target.name)
                               }}
                             >
-                              {originalPost.likes} Likes 
+                              {originalPost.likes} <Favorite/>
                             </button>
                             
                         </div>

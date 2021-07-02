@@ -7,7 +7,7 @@ import "./videoBar.css";
 
 const style = {
   content: {
-    height: "100%",
+    height: "120%",
     width: "100%",
     backgroundColor: "rgba(255, 255, 255, 0.8)",
     color: "white",
@@ -173,16 +173,19 @@ class VideoChoice extends Component {
                     data={this.state.videos.map((video, key) => {
                       return (
                         <div
-                          className="card mb-4 text-center"
+                          className="card mb-4"
                           style={{ width: "500px", height: "250px" }}
                           key={key}
                         >
                           <div className="card-title bg-dark">
-                            <small className="text-black">
-                              <b>{video.title}</b>
+                            <small className="text-black float-left">
+                              <b>Video Name: &nbsp;&nbsp;{video.title}</b>
+                            </small>
+                            <small className="text-black float-right">
+                              <b>Price : {video.price} TT &nbsp;&nbsp;</b>
                             </small>
                           </div>
-                          <div>
+                          <div className="text-center">
                             <p
                               onClick={() => {
                                 this.changeVideo(
@@ -200,6 +203,11 @@ class VideoChoice extends Component {
                                 style={{ width: "300px" }}
                               />
                             </p>
+                          </div>
+                          <div className="card-title bg-dark">
+                            <small className="text-black float-left">
+                              <b>Creator: &nbsp;&nbsp;{video.author}</b>
+                            </small>
                           </div>
                         </div>
                       );

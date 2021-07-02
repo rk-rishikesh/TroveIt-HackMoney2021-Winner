@@ -55,8 +55,6 @@ class Upload extends Component {
 
     const web3 = window.web3;
     
-    
-
     // Initialize your dapp here like getting user accounts etc
     // Load account
     const accounts = await web3.eth.getAccounts();
@@ -107,7 +105,7 @@ class Upload extends Component {
     };
   };
 
-  uploadPost = (caption) => {
+  uploadPost = (caption, rate) => {
     this.setState({ loading: true });
     console.log("Submitting file to IPFS...");
     //adding file to the IPFS
@@ -140,7 +138,7 @@ class Upload extends Component {
             console.log("FEED POST");
             console.log("Original Owner : ", originalPost.owner);
             this.state.troveit.methods
-              .uploadPost(result[0].hash, value, caption, false, 1, originalPost.id)
+              .uploadPost(result[0].hash, value, caption, false, rate, originalPost.id, originalPost.owner)
               .send({ from: this.state.account })
               .on("transactionHash", (hash) => {
                 this.setState({ loading: false });
@@ -158,7 +156,7 @@ class Upload extends Component {
           console.log(value);
           console.log("ORIGINAL");
           this.state.troveit.methods
-            .uploadPost(result[0].hash, value, caption, true, 1, 1)
+            .uploadPost(result[0].hash, value, caption, true, rate, 1, this.state.account)
             .send({ from: this.state.account })
             .on("transactionHash", (hash) => {
               this.setState({ loading: false });
@@ -210,7 +208,8 @@ class Upload extends Component {
                   onSubmit={(event) => {
                     event.preventDefault();
                     const caption = this.imageCaption.value;
-                    this.uploadPost(caption);
+                    const rate = this.imagePrice.value;
+                    this.uploadPost(caption, rate);
                   }}
                 >
 
@@ -249,6 +248,17 @@ class Upload extends Component {
                       }}
                       className="form-control"
                       placeholder="Caption ..."
+                      required
+                    />
+                    <br></br>
+                    <input
+                      id="imagePrice"
+                      type="number"
+                      ref={(inputPrice) => {
+                        this.imagePrice = inputPrice;
+                      }}
+                      className="form-control"
+                      placeholder="Set Price"
                       required
                     />
                     <div

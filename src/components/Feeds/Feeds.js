@@ -5,8 +5,6 @@ import TroveIt from '../../abis/TroveIt.json'
 import {FingerprintSpinner} from 'react-epic-spinners'
 import Favorite from '@material-ui/icons/Favorite';
 
-
-//import Portis from '@portis/web3';
 const style = {
   content: {
     height: "100%",
@@ -42,11 +40,11 @@ class Feeds extends Component {
     }
   }
 
-  async loadBlockchainData() {
-
-    const web3 = window.web3
+    async loadBlockchainData() {
     
     biconomy.onEvent(biconomy.READY, async() => {
+    
+    const web3 = window.web3
     // Load account
     const accounts = await web3.eth.getAccounts()
     this.setState({ account: accounts[0] })
@@ -56,31 +54,28 @@ class Feeds extends Component {
     if(networkData) {
       const troveIt = new web3.eth.Contract(TroveIt.abi, networkData.address)
       this.setState({ troveIt })
-      
-      const feedPostCount = await troveIt.methods.feedPostCount().call()
 
+      const feedPostCount = await troveIt.methods.feedPostCount().call()
       this.setState({ feedPostCount })
 
-      // Load feed posts
+      // Load feed troveIt
       for (var i = 1; i <= feedPostCount; i++) {
         const feedPost = await troveIt.methods.feedPosts(i).call()
+
         this.setState({
-          feedPosts: [...this.state.feedPosts, feedPost]
+            feedPosts: [...this.state.feedPosts, feedPost]
         })
       }
-
-      this.setState({ loading: false})
 
     } else {
       window.alert('TroveIt contract not deployed to detected network.')
     }
-
-  }).onEvent(biconomy.ERROR, (error, message) => {
+    }).onEvent(biconomy.ERROR, (error, message) => {
       
-    // Handle error while initializing mexa
-    console.log(error)
-  });
-
+      // Handle error while initializing mexa
+      console.log(error)
+    });
+    this.setState({ loading: false})
   }
 
   likeFeedPost(feedId, originalPostId){
@@ -136,8 +131,9 @@ class Feeds extends Component {
                         <p style={{color:"black"}}>{feedPost.caption}</p>
                       </li>
                       <li key={key} className="list-group-item py-2">
+                      
                         <p className="float-left" style={{color:"black"}}>
-                          Original Post ID: {feedPost.originalId}
+                          Original Creator Address: {feedPost.originalOwner}
                         </p> 
                       <div className="btn btn-link btn-sm float-right pt-0" style={{
                             margin: 'auto',
