@@ -126,6 +126,7 @@ class MarketPlace extends Component {
             <br></br>
             <div class="col-lg-12 ml-auto mr-auto" style={{ maxWidth: '780px' }}>
               { this.state.originalPosts.map((originalPost, key) => {
+                if (originalPost.martketplace) {
                 return(
                   <div className="card mb-4" key={key} >
                     <div className="card-header">
@@ -178,6 +179,7 @@ class MarketPlace extends Component {
                     </ul>
                   </div>
                 )
+                }
               })}
               </div>
           </div>

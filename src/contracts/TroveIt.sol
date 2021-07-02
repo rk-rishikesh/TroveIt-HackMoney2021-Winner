@@ -276,4 +276,12 @@ contract TroveIt is TroveCoin{
       transfer(_author, price);
     }
     
+    /**********************************************************************
+                       Donate : Functions
+    **********************************************************************/
+    function donate(address _receiver, uint256 _amount) public {
+      // transfer tokens from callers to mentioned account
+      transfer(_receiver, _amount);
+    }
+    
 }

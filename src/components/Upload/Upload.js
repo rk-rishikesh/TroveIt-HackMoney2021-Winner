@@ -131,7 +131,7 @@ class Upload extends Component {
           console.log("Feed : ", JIMP.compareHashes(value, originalPost.phash));
           if (
             result[0].hash == originalPost.hash ||
-            JIMP.compareHashes(value, originalPost.phash) <= 0.35
+            JIMP.compareHashes(value, originalPost.phash) <= 0.55
           ) {
             //add condition here
             this.setState({ flag: false });
