@@ -90,9 +90,11 @@ class MyProfile extends Component {
       const response = await troveit.methods
         .checkBalance()
         .call({ from: this.state.account });
-      console.log(response);
-      this.setState({ balance: response });
 
+
+      this.setState({ balance: response });
+      console.log(response);
+      console.log(this.state.balance)
       this.setState({ loading: false });
     } else {
       window.alert("Contract not deployed to detected network.");
@@ -119,18 +121,11 @@ class MyProfile extends Component {
       });
   };
 
-  sellToken = (amount) => {
-    this.setState({ loading: true });
-    this.state.troveit.methods
-      .sellToken(amount)
-      .send({ from: this.state.account })
-      .on("transactionHash", (hash) => {
-        this.setState({ loading: false });
-      });
-  };
+
 
   withdraw = () => {
     this.setState({ loading: true });
+    console.log("Heloooo");
     this.state.troveit.methods
       .withdraw()
       .send({ from: this.state.account })
@@ -148,6 +143,16 @@ class MyProfile extends Component {
         this.setState({ loading: false });
       });
   }
+
+  sellToken = (amount) => {
+    this.setState({ loading: true });
+    this.state.troveit.methods
+      .sellToken(amount)
+      .send({ from: this.state.account })
+      .on("transactionHash", (hash) => {
+        this.setState({ loading: false });
+      });
+  };
 
   donate = (receiver, amount) => {
     this.setState({ loading: true });
@@ -239,6 +244,7 @@ class MyProfile extends Component {
                                 "Ether"
                               );
                               this.buyToken(amount);
+                              
                             }}
                           >
                             <AccountBalanceWalletIcon />
@@ -253,7 +259,8 @@ class MyProfile extends Component {
                       <Form
                         onSubmit={(e) => {
                           e.preventDefault();
-                          this.sellToken(this.input.value);
+                          console.log(this.inputAmount.value, this.state.account);
+                          this.sellToken(this.inputAmount.value);
                         }}
                       >
                         <div
@@ -270,7 +277,7 @@ class MyProfile extends Component {
                           <div>
                             <input
                               ref={(amount) => {
-                                this.input = amount;
+                                this.inputAmount = amount;
                               }}
                               type="number"
                               style={{ width: "100%", marginLeft: "1%" }}
@@ -312,6 +319,7 @@ class MyProfile extends Component {
                             color="secondary"
                             onClick={() => {
                               this.withdraw();
+                              console.log("Helo");
                             }}
                           >
                             <SystemUpdateAltIcon />
