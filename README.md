@@ -1,7 +1,7 @@
 
 # TroveIT
 
-This project was a submitted at HackMoney 2021, a global Hackathon organized by EthGlobal and won a pool prize of $3500 by Biconomy.
+> This project was a submitted at HackMoney 2021, a global Hackathon organized by EthGlobal and won a pool prize of $3500 by Biconomy.
 
 
 ## Instructions to run the project locally
